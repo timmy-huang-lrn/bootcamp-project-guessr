@@ -39,12 +39,12 @@ app.get('/itemsapi', function (req, res) {
         config.consumerSecret,
         {
             user_id: user_id,
-            activity_template_id: 'quickstart_examples_activity_template_001',
+            activity_template_id: 'TEST_ce73ea0e-20a2-47be-9a3f-a9e5a4037d5a',
             session_id: session_id,
-            activity_id: 'quickstart_examples_activity_001',
+            activity_id: 'office_guessr_001',
             rendering_type: 'assess',
             type: 'submit_practice',
-            name: 'Items API Quickstart',
+            name: 'Office Guessr',
             state: 'initial'
         }
     );
