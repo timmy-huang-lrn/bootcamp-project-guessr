@@ -39,13 +39,18 @@ app.get('/itemsapi', function (req, res) {
         config.consumerSecret,
         {
             user_id: user_id,
-            activity_template_id: 'TEST_ce73ea0e-20a2-47be-9a3f-a9e5a4037d5a',
+            activity_template_id: '7169d747-2ca1-4398-8a6d-ac53e93d2bc1',
             session_id: session_id,
-            activity_id: 'office_guessr_001',
+            activity_id: 'office_guessr_1',
             rendering_type: 'assess',
             type: 'submit_practice',
             name: 'Office Guessr',
-            state: 'initial'
+            state: 'initial',
+            config: {
+                configuration: {
+                    onsubmit_redirect_url: `/reportsapi?user_id=${user_id}&session_id=${session_id}`
+                }
+            }
         }
     );
 
@@ -120,6 +125,13 @@ app.get('/authorapi', function (req, res) {
 
 // Reports API
 app.get('/reportsapi', function (req, res) {
+
+    const { user_id, session_id } = req.query;
+
+    console.log('New report session started!');
+    console.log(`User id: ${user_id}`);
+    console.log(`Session id: ${session_id}`);
+
     const learnositySdk = new Learnosity();
 
     const request = learnositySdk.init(
@@ -132,9 +144,10 @@ app.get('/reportsapi', function (req, res) {
         {
             reports: [
                 {
-                    id: 'report-1',
-                    type: 'sessions-summary',
-                    user_id: '$ANONYMIZED_USER_ID'
+                    id: 'session-detail',
+                    type: 'session-detail-by-item',
+                    user_id: user_id,
+                    session_id: session_id
                 }
             ]
         }
@@ -143,29 +156,6 @@ app.get('/reportsapi', function (req, res) {
     res.render('reports', { request });
 });
 
-// Author Aide API
-app.get('/authoraide', function (req, res) {
-    const learnositySdk = new Learnosity();
-
-    const request = learnositySdk.init(
-        'authoraide',
-        {
-            consumer_key: config.consumerKey,
-            domain: domain
-        },
-        config.consumerSecret,
-        {
-            user: {
-                id: 'demos-site',
-                firstname: 'Demos',
-                lastname: 'User',
-                email: 'demos@learnosity.com'
-            }
-        }
-    );
-
-    res.render('main', { request });
-});
 
 // Data API
 app.get('/dataapi', async function (req, res) {
