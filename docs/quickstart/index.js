@@ -17,15 +17,9 @@ app.set('view engine', 'ejs');
 // Serve static CSS files
 app.use('/css', express.static('./css'));
 
-// Home page - list all examples
-app.get('/', function (req, res) {
-    res.render('index', {
-        name: 'Learnosity SDK Quickstart Examples'
-    });
-});
 
 // Items API - Standalone Assessment
-app.get('/itemsapi', function (req, res) {
+app.get('/', function (req, res) {
     const learnositySdk = new Learnosity();
     const user_id = Learnosity.Uuid.generate();
     const session_id = Learnosity.Uuid.generate();
@@ -96,3 +90,4 @@ app.listen(port, function () {
     console.log(`Server started http://${domain}:${port}. Press Ctrl-c to quit.`);
 });
 
+module.exports = app;
