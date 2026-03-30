@@ -122,6 +122,102 @@
         z-index: 1;
     }
 
+    /* ========== TIMER BAR ========== */
+    .timer-bar-wrapper {
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        background: var(--bg-deep);
+        padding: 12px 24px 0;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+    .timer-bar-wrapper.visible {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    .timer-bar {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        background: var(--bg-card);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        border-radius: 12px;
+        padding: 14px 20px;
+        margin-top: 24px;
+    }
+
+    .timer-icon {
+        width: 22px; height: 22px;
+        flex-shrink: 0;
+        opacity: 0.7;
+    }
+
+    .timer-track {
+        flex: 1;
+        height: 6px;
+        background: rgba(255, 255, 255, 0.06);
+        border-radius: 3px;
+        overflow: hidden;
+        position: relative;
+    }
+
+    .timer-fill {
+        height: 100%;
+        width: 100%;
+        border-radius: 3px;
+        background: var(--green);
+        transform-origin: left center;
+        transition: background 0.3s ease;
+    }
+    .timer-fill.warning { background: var(--yellow); }
+    .timer-fill.danger { background: var(--red); }
+
+    .timer-digits {
+        font-family: 'IBM Plex Mono', monospace;
+        font-size: 16px;
+        font-weight: 600;
+        min-width: 38px;
+        text-align: right;
+        color: var(--text-primary);
+        transition: color 0.3s ease;
+    }
+    .timer-digits.warning { color: var(--yellow); }
+    .timer-digits.danger { color: var(--red); }
+
+    .timer-question-label {
+        font-family: 'IBM Plex Mono', monospace;
+        font-size: 11px;
+        font-weight: 600;
+        letter-spacing: 1.5px;
+        text-transform: uppercase;
+        color: var(--text-dim);
+        flex-shrink: 0;
+    }
+
+    /* Time's up flash */
+    .timer-bar.times-up {
+        animation: timesUpFlash 0.5s ease;
+    }
+    @keyframes timesUpFlash {
+        0%, 100% { border-color: rgba(255, 255, 255, 0.06); }
+        30% { border-color: var(--red); }
+        60% { border-color: rgba(231, 76, 60, 0.3); }
+    }
+
+    .times-up-label {
+        font-family: 'IBM Plex Mono', monospace;
+        font-size: 12px;
+        font-weight: 600;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        color: var(--red);
+        display: none;
+    }
+    .timer-bar.times-up .times-up-label { display: block; }
+    .timer-bar.times-up .timer-digits { display: none; }
+
     /* ========== COMPASS WATERMARK ========== */
     .watermark {
         position: fixed;
@@ -149,6 +245,9 @@
         .header { padding: 12px 16px; }
         .header-title { font-size: 17px; }
         .header-status { font-size: 11px; }
+        .timer-bar-wrapper { padding: 0 12px; }
+        .timer-bar { padding: 10px 14px; gap: 10px; }
+        .timer-digits { font-size: 14px; }
         .quiz-wrapper { padding: 20px 12px 60px; }
         .quiz-container { padding: 16px; border-radius: 12px; }
         .watermark { width: 120px; height: 120px; bottom: 12px; right: 12px; }
@@ -174,6 +273,25 @@
     </div>
 </div>
 
+<!-- TIMER -->
+<div class="timer-bar-wrapper" id="timer-wrapper">
+    <div class="timer-bar" id="timer-bar">
+        <svg class="timer-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="12" cy="13" r="9" stroke="var(--text-muted)" stroke-width="1.5"/>
+            <line x1="12" y1="13" x2="12" y2="8" stroke="var(--text-primary)" stroke-width="1.5" stroke-linecap="round"/>
+            <line x1="12" y1="13" x2="15" y2="13" stroke="var(--text-muted)" stroke-width="1.5" stroke-linecap="round"/>
+            <line x1="12" y1="2" x2="12" y2="4" stroke="var(--text-muted)" stroke-width="1.5" stroke-linecap="round"/>
+            <line x1="9" y1="2" x2="15" y2="2" stroke="var(--text-muted)" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+        <span class="timer-question-label" id="timer-q-label">Q1</span>
+        <div class="timer-track">
+            <div class="timer-fill" id="timer-fill"></div>
+        </div>
+        <span class="timer-digits" id="timer-digits">15</span>
+        <span class="times-up-label">Time's up!</span>
+    </div>
+</div>
+
 <!-- QUIZ -->
 <div class="quiz-wrapper">
     <div class="quiz-container">
@@ -196,10 +314,92 @@
 </svg>
 
 <script>
+    const TIMER_DURATION = 15; // seconds per question
+    let timerInterval = null;
+    let timeLeft = TIMER_DURATION;
+    let questionsLeft = 5;
+
+    const timerWrapper = document.getElementById('timer-wrapper');
+    const timerBar = document.getElementById('timer-bar');
+    const timerFill = document.getElementById('timer-fill');
+    const timerDigits = document.getElementById('timer-digits');
+    const timerQLabel = document.getElementById('timer-q-label');
+
+    function resetTimer(questionNum) {
+        // Clear previous
+        clearInterval(timerInterval);
+        timeLeft = TIMER_DURATION;
+
+        if (questionsLeft === 0) {
+            document.getElementById("timer-wrapper").style.display = "none";
+        } else {
+            questionsLeft = questionsLeft - 1;
+        }
+
+        // Reset UI
+        timerBar.classList.remove('times-up');
+        timerFill.classList.remove('warning', 'danger');
+        timerDigits.classList.remove('warning', 'danger');
+        timerFill.style.transform = 'scaleX(1)';
+        timerDigits.textContent = TIMER_DURATION;
+        timerQLabel.textContent = 'Q' + questionNum;
+
+        // Start countdown
+        const startTime = Date.now();
+        const endTime = startTime + TIMER_DURATION * 1000;
+
+        timerInterval = setInterval(() => {
+            const now = Date.now();
+            const remaining = Math.max(0, endTime - now);
+            const remainingSec = Math.ceil(remaining / 1000);
+            const fraction = remaining / (TIMER_DURATION * 1000);
+
+            // Update bar
+            timerFill.style.transform = 'scaleX(' + fraction + ')';
+            timerDigits.textContent = remainingSec;
+
+            // Color thresholds
+            if (remainingSec <= 3) {
+                timerFill.classList.remove('warning');
+                timerFill.classList.add('danger');
+                timerDigits.classList.remove('warning');
+                timerDigits.classList.add('danger');
+            } else if (remainingSec <= 5) {
+                timerFill.classList.remove('danger');
+                timerFill.classList.add('warning');
+                timerDigits.classList.remove('danger');
+                timerDigits.classList.add('warning');
+            } else {
+                timerFill.classList.remove('warning', 'danger');
+                timerDigits.classList.remove('warning', 'danger');
+            }
+
+            // Time's up
+            if (remaining <= 0) {
+                clearInterval(timerInterval);
+                timerBar.classList.add('times-up');
+                timerFill.style.transform = 'scaleX(0)';
+            }
+        }, 50);
+    }
+
+    function stopTimer() {
+        clearInterval(timerInterval);
+    }
+
     const request = <%- JSON.stringify(request) %>;
     const itemsApp = LearnosityItems.init(request, {
         readyListener() {
             console.log('Learnosity ready');
+
+            // Show the timer and start for first question
+            timerWrapper.classList.add('visible');
+            // resetTimer(1);
+
+            // Listen for question changes
+            itemsApp.on('item:changed', function (itemIndex) {
+                resetTimer(itemIndex + 1);
+            });
         },
         errorListener(err) {
             console.error('Learnosity error', err);
