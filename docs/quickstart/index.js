@@ -3,6 +3,7 @@
 // Unified quickstart server with all API examples
 'use strict';
 
+const path = require('path');
 const Learnosity = require('../../index');
 const DataApi = require('../../lib/DataApi');
 const config = require('./config');
@@ -10,12 +11,13 @@ const express = require('express');
 const packageJson = require('../../package.json');
 const app = express();
 const port = 8001;
-const domain = 'localhost';
+const domain = process.env.LEARNOSITY_DOMAIN || 'localhost';
 
 app.set('view engine', 'ejs');
+app.set('views', path.join(__dirname, 'views'));
 
 // Serve static CSS files
-app.use('/css', express.static('./css'));
+app.use('/css', express.static(path.join(__dirname, 'css')));
 
 
 // Items API - Standalone Assessment
