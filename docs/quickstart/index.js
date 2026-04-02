@@ -88,8 +88,10 @@ app.get('/reportsapi', function (req, res) {
 
 
 
-app.listen(port, function () {
-    console.log(`Server started http://${domain}:${port}. Press Ctrl-c to quit.`);
-});
+if (require.main === module) {
+    app.listen(port, function () {
+        console.log(`Server started http://${domain}:${port}. Press Ctrl-c to quit.`);
+    });
+}
 
 module.exports = app;
