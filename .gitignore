@@ -226,5 +226,5 @@ flycheck_*.el
 .vagrant/
 
 # lock files
-package-lock.json
+# package-lock.json committed for reproducible Vercel installs
 yarn.lock
