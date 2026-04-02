@@ -1,10 +1,3 @@
 'use strict';
 
-const express = require('express');
-const app = express();
-
-app.get('*', function (req, res) {
-    res.send('hello from vercel');
-});
-
-module.exports = app;
+module.exports = require('../docs/quickstart/index.js');
