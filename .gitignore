@@ -228,5 +228,3 @@ flycheck_*.el
 # lock files
 package-lock.json
 yarn.lock
-
-/docs/quickstart/config.js
