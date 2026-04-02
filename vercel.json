@@ -1,14 +1,18 @@
 {
   "version": 2,
-  "functions": {
-    "api/index.js": {
-      "includeFiles": "docs/quickstart/{views,css}/**"
-    }
-  },
-  "rewrites": [
+  "builds": [
     {
-      "source": "/(.*)",
-      "destination": "/api/index"
+      "src": "api/index.js",
+      "use": "@vercel/node",
+      "config": {
+        "includeFiles": ["docs/quickstart/views/**", "docs/quickstart/css/**"]
+      }
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "/api/index.js"
     }
   ]
 }
