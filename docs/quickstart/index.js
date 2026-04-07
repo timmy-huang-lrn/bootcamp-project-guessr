@@ -11,7 +11,6 @@ const express = require('express');
 const packageJson = require('../../package.json');
 const app = express();
 const port = 8001;
-const domain = process.env.LEARNOSITY_DOMAIN || 'localhost';
 
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
@@ -30,7 +29,7 @@ app.get('/', function (req, res) {
         'items',
         {
             consumer_key: config.consumerKey,
-            domain: domain
+            domain: req.hostname
         },
         config.consumerSecret,
         {
@@ -68,7 +67,7 @@ app.get('/reportsapi', function (req, res) {
         'reports',
         {
             consumer_key: config.consumerKey,
-            domain: domain
+            domain: req.hostname
         },
         config.consumerSecret,
         {
